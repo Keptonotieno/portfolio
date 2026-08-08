@@ -44,6 +44,30 @@ import {
 import { Project, Skill, Experience, Education, Testimonial, BlogPost, ContactRequest, ProjectSyncInfo } from './types';
 import { calculateReadingTime } from './utils/readingTime';
 
+// Framer Motion scroll entrance animation variants for main sections
+const sectionStaggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const sectionFadeUpItem = {
+  hidden: { opacity: 0, y: 35 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
 // Futuristic technology to icon & styling mapper helper
 const getTechIconInfo = (techName: string) => {
   const normalized = techName.trim().toLowerCase();
@@ -948,10 +972,17 @@ ADDITIONAL INFORMATION:
       <VenturePortfolio darkMode={darkMode} />
 
       {/* 2. ABOUT ME SECTION */}
-      <section id="about" className="py-24 px-6 relative border-t border-gray-500/10">
+      <motion.section 
+        id="about" 
+        className="py-24 px-6 relative border-t border-gray-500/10"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+        variants={sectionStaggerContainer}
+      >
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
-          <div className="lg:col-span-5 space-y-6">
+          <motion.div className="lg:col-span-5 space-y-6" variants={sectionFadeUpItem}>
             <div className={`p-6 rounded-2xl border ${
               darkMode ? 'bg-white/5 border-white/5' : 'bg-white border-black/5 shadow-md'
             }`}>
@@ -977,9 +1008,9 @@ ADDITIONAL INFORMATION:
                 <p className="font-sans text-sm font-bold text-purple-400 mt-0.5">AI Integrated Systems</p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="lg:col-span-7 text-left space-y-6">
+          <motion.div className="lg:col-span-7 text-left space-y-6" variants={sectionFadeUpItem}>
             <div className="space-y-2">
               <span className="font-mono text-xs text-cyan-400 font-bold uppercase tracking-wider">01 // IDENTITY NODE</span>
               <h2 className="text-3xl font-sans font-extrabold tracking-tight">Biography & Profile Summary</h2>
@@ -1015,26 +1046,37 @@ ADDITIONAL INFORMATION:
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
         </div>
-      </section>
+      </motion.section>
 
       {/* EXPERTISE SECTION (Mockup Style: Technical Arsenal + How I Can Help You) */}
       <ExpertiseSection darkMode={darkMode} />
 
       {/* 4. EXPERIENCE SECTION (Timeline style) */}
-      <section id="experience" className="py-24 px-6 relative border-t border-gray-500/10">
+      <motion.section 
+        id="experience" 
+        className="py-24 px-6 relative border-t border-gray-500/10"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+        variants={sectionStaggerContainer}
+      >
         <div className="max-w-5xl mx-auto space-y-12">
           
-          <div className="text-center space-y-3 max-w-xl mx-auto">
+          <motion.div className="text-center space-y-3 max-w-xl mx-auto" variants={sectionFadeUpItem}>
             <span className="font-mono text-xs text-cyan-400 font-bold uppercase tracking-widest">03 // CHRONOLOGY LOGS</span>
             <h2 className="text-3xl font-sans font-extrabold tracking-tight">Professional Experience Timeline</h2>
-          </div>
+          </motion.div>
 
           <div className="relative border-l border-gray-500/20 ml-4 md:ml-6 space-y-12 pt-4">
             {INITIAL_EXPERIENCE.map((exp, index) => (
-              <div key={exp.id} className="relative pl-8 sm:pl-10 group">
+              <motion.div 
+                key={exp.id} 
+                className="relative pl-8 sm:pl-10 group"
+                variants={sectionFadeUpItem}
+              >
                 {/* Connector point */}
                 <div className="absolute left-0 top-1 w-4 h-4 rounded-full bg-cyan-400 border-4 border-gray-950 -translate-x-[9px] group-hover:scale-125 transition-transform" />
 
@@ -1059,34 +1101,42 @@ ADDITIONAL INFORMATION:
                     ))}
                   </ul>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
 
         </div>
-      </section>
+      </motion.section>
 
       {/* 5. EDUCATION SECTION (Timeline style, editable in CMS) */}
-      <section id="education" className={`py-24 px-6 relative border-t border-gray-500/10 ${
-        darkMode ? 'bg-gray-900/10' : 'bg-white'
-      }`}>
+      <motion.section 
+        id="education" 
+        className={`py-24 px-6 relative border-t border-gray-500/10 ${
+          darkMode ? 'bg-gray-900/10' : 'bg-white'
+        }`}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+        variants={sectionStaggerContainer}
+      >
         <div className="max-w-5xl mx-auto space-y-12">
           
-          <div className="text-center space-y-3 max-w-xl mx-auto">
+          <motion.div className="text-center space-y-3 max-w-xl mx-auto" variants={sectionFadeUpItem}>
             <span className="font-mono text-xs text-purple-400 font-bold uppercase tracking-widest">04 // KNOWLEDGE NODES</span>
             <h2 className="text-3xl font-sans font-extrabold tracking-tight">Education & Certifications</h2>
             <p className="text-xs text-gray-400">
               Credentials validating software engineering acumen and continuous tech training.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {education.map((edu) => (
-              <div 
+              <motion.div 
                 key={edu.id}
                 className={`p-6 rounded-2xl border transition-all hover-scale ${
                   darkMode ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-black/5 shadow-sm'
                 } flex gap-4 items-start`}
+                variants={sectionFadeUpItem}
               >
                 <div className="w-10 h-10 rounded-xl bg-purple-600/10 text-purple-400 flex items-center justify-center shrink-0">
                   <GraduationCap size={20} />
@@ -1101,12 +1151,12 @@ ADDITIONAL INFORMATION:
                   <h3 className="font-sans font-bold text-sm leading-snug">{edu.degree}</h3>
                   <p className="text-xs text-gray-400">{edu.institution}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
 
         </div>
-      </section>
+      </motion.section>
 
       {/* 6. PROJECTS SHOWCASE */}
       <section id="projects" className="py-24 px-6 relative border-t border-gray-500/10">
