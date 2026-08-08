@@ -397,7 +397,10 @@ export default function App() {
   // Official profile picture asset with developer custom upload support
   const [profilePic, setProfilePic] = useState<string>(() => {
     const cached = localStorage.getItem('kepton_profile_pic');
-    return cached || keptonPortrait;
+    if (cached && (cached.startsWith('data:image/') || cached.startsWith('http://') || cached.startsWith('https://'))) {
+      return cached;
+    }
+    return keptonPortrait;
   });
 
   // Track if resume text was copied
@@ -946,10 +949,13 @@ ADDITIONAL INFORMATION:
               <div className="w-full h-full rounded-2xl overflow-hidden relative bg-gray-800">
                 <img 
                   id="hero-profile-avatar"
-                  src={profilePic} 
+                  src={profilePic || keptonPortrait} 
                   alt="Kepton Otieno" 
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                   referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = keptonPortrait;
+                  }}
                 />
 
                 {/* Small persistent verified badge on the avatar corner */}

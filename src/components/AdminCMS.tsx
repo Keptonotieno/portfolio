@@ -411,6 +411,9 @@ export default function AdminCMS({
                           alt="Profile Preview" 
                           className="w-full h-full object-cover object-center"
                           referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = keptonPortrait;
+                          }}
                         />
                       </div>
                       <div className="flex-1 min-w-0 space-y-1">
