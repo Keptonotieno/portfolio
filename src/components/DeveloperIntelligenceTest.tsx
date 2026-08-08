@@ -454,11 +454,52 @@ export default function DeveloperIntelligenceTest({ darkMode }: { darkMode: bool
     setIsScoreSaved(true);
   };
 
-  const shareResult = () => {
+  const shareResult = async () => {
     const text = `🧠 Kepton Developer Intelligence Test Completed!\n🏆 Rank: ${getRank(xp)}\n⚡ XP Earned: ${xp} XP\n📈 Score: ${Math.round((correctCount / activeDeck.length) * 100)}%\nPlay here: ${window.location.href}`;
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    
+    // Try modern API first
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        return;
+      }
+    } catch (err) {
+      console.warn('Modern clipboard API failed for quiz sharing, attempting fallback:', err);
+    }
+
+    // Robust fallback for sandboxed iframes
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.top = '0';
+      textArea.style.left = '0';
+      textArea.style.width = '2em';
+      textArea.style.height = '2em';
+      textArea.style.padding = '0';
+      textArea.style.border = 'none';
+      textArea.style.outline = 'none';
+      textArea.style.boxShadow = 'none';
+      textArea.style.background = 'transparent';
+      
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      if (successful) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        throw new Error('execCommand copy returned false');
+      }
+    } catch (err) {
+      console.error('Fallback clipboard copy for quiz sharing failed:', err);
+    }
   };
 
   // Detect dominant category (strength)

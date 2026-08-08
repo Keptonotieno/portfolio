@@ -11,7 +11,7 @@ import {
   Sliders, MessageSquareCode, ArrowUpRight, GraduationCap, Clock, Upload, Edit, 
   ChevronRight, ArrowRight, X, RefreshCw, GitFork, Star, GitBranch, CheckCircle2, 
   Bug, Gauge, Phone, Atom, Wind, Zap, Map, LineChart, Smartphone, Wifi, Layers, FileCode,
-  ArrowUpDown, ChevronDown
+  ArrowUpDown, ChevronDown, Copy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -28,6 +28,9 @@ import DeveloperIntelligenceTest from './components/DeveloperIntelligenceTest';
 import KeptonCodeSnake from './components/KeptonCodeSnake';
 import ProjectReviewModal from './components/ProjectReviewModal';
 import ProjectCard from './components/ProjectCard';
+
+// Direct import of official exact user attached profile photo
+import keptonPortrait from './assets/images/kepton_portrait_1786179068947.jpg';
 
 // Imports of structural static datasets
 import { 
@@ -367,10 +370,14 @@ export default function App() {
     return cached ? JSON.parse(cached) : [];
   });
 
-  // Custom customizable profile picture
+  // Official profile picture asset with developer custom upload support
   const [profilePic, setProfilePic] = useState<string>(() => {
-    return localStorage.getItem('kepton_profile_pic') || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=300&auto=format&fit=crop';
+    const cached = localStorage.getItem('kepton_profile_pic');
+    return cached || keptonPortrait;
   });
+
+  // Track if resume text was copied
+  const [copiedResume, setCopiedResume] = useState(false);
 
   // Contact form state
   const [contactName, setContactName] = useState('');
@@ -402,9 +409,6 @@ export default function App() {
 
   // Blog modal viewer
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-
-  // Drag-and-drop file upload state for profile photo
-  const [isDragging, setIsDragging] = useState(false);
 
   // Sync cache changes to localStorage
   useEffect(() => {
@@ -586,9 +590,7 @@ export default function App() {
     localStorage.setItem('kepton_contacts', JSON.stringify(contacts));
   }, [contacts]);
 
-  useEffect(() => {
-    localStorage.setItem('kepton_profile_pic', profilePic);
-  }, [profilePic]);
+
 
   // Handle Contact submit
   const handleContactSubmit = async (e: React.FormEvent) => {
@@ -619,41 +621,10 @@ export default function App() {
     setTimeout(() => setSubmitSuccess(false), 4000);
   };
 
-  // Profile image upload handlers
-  const processImageFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setProfilePic(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) processImageFile(file);
-  };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      processImageFile(file);
-    }
-  };
-
-  const handleDownloadResume = () => {
-    // Generate an elegant, scannable raw-text curriculum vitae download
-    const cvText = `
+  const getResumeText = () => {
+    return `
 --------------------------------------------------
 KEPTON OTIENO - SOFTWARE DEVELOPER
 Nairobi, Kenya | keptonotieno@gmail.com | keptonokoth@gmail.com
@@ -690,6 +661,10 @@ EDUCATION:
 ADDITIONAL INFORMATION:
 - Problem Solving, Team Collaboration, Software Development Practices, Continuous Learning, Adaptability, Technical Research
     `;
+  };
+
+  const handleDownloadResume = () => {
+    const cvText = getResumeText();
     const blob = new Blob([cvText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -699,6 +674,56 @@ ADDITIONAL INFORMATION:
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const handleCopyResumeText = async () => {
+    const text = getResumeText().trim();
+    
+    // Try modern API first
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(text);
+        setCopiedResume(true);
+        setTimeout(() => setCopiedResume(false), 2000);
+        return;
+      }
+    } catch (err) {
+      console.warn('Modern clipboard API failed, attempting fallback:', err);
+    }
+
+    // Robust fallback for sandboxed iframes using temporary textarea
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      
+      // Styling to avoid layout issues or scrolling
+      textArea.style.position = 'fixed';
+      textArea.style.top = '0';
+      textArea.style.left = '0';
+      textArea.style.width = '2em';
+      textArea.style.height = '2em';
+      textArea.style.padding = '0';
+      textArea.style.border = 'none';
+      textArea.style.outline = 'none';
+      textArea.style.boxShadow = 'none';
+      textArea.style.background = 'transparent';
+      
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      if (successful) {
+        setCopiedResume(true);
+        setTimeout(() => setCopiedResume(false), 2000);
+      } else {
+        throw new Error('execCommand copy returned false');
+      }
+    } catch (err) {
+      console.error('Fallback clipboard copy failed:', err);
+    }
   };
 
   // Dynamically extract all technologies from the projects array
@@ -834,6 +859,21 @@ ADDITIONAL INFORMATION:
                 <span>Download Resume</span>
               </button>
 
+              <button
+                id="hero-copy-resume-btn"
+                onClick={handleCopyResumeText}
+                className={`px-6 py-3.5 border rounded-xl text-sm font-semibold hover:scale-[1.02] transition-all flex items-center gap-2 ${
+                  copiedResume
+                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
+                    : darkMode 
+                    ? 'border-white/10 hover:bg-white/5 text-gray-200' 
+                    : 'border-black/10 hover:bg-black/5 text-gray-700'
+                }`}
+              >
+                {copiedResume ? <Check size={16} className="text-emerald-400 animate-bounce" /> : <Copy size={16} />}
+                <span>{copiedResume ? 'Copied!' : 'Copy Resume'}</span>
+              </button>
+
               <a
                 id="hero-contact-btn"
                 href="#contact"
@@ -869,19 +909,14 @@ ADDITIONAL INFORMATION:
             </div>
           </div>
 
-          {/* Hero Profile Photo Container (Editable via Drag & Drop or Click) */}
+          {/* Hero Profile Photo Container (Static) */}
           <div className="lg:col-span-5 flex justify-center relative">
             <div 
-              id="hero-profile-dropzone"
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
+              id="hero-profile-container"
               className={`relative group w-72 h-72 sm:w-85 sm:h-85 rounded-3xl p-3 border transition-all duration-300 ${
-                isDragging 
-                  ? 'border-cyan-400 bg-cyan-500/10 scale-105' 
-                  : darkMode 
-                  ? 'border-white/10 bg-gray-900/40 backdrop-blur-md' 
-                  : 'border-black/10 bg-white shadow-xl'
+                darkMode 
+                  ? 'border-cyan-500/30 bg-gray-900/40 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:border-cyan-400' 
+                  : 'border-purple-500/20 bg-white shadow-xl hover:border-purple-500/50'
               }`}
             >
               <div className="w-full h-full rounded-2xl overflow-hidden relative bg-gray-800">
@@ -889,25 +924,14 @@ ADDITIONAL INFORMATION:
                   id="hero-profile-avatar"
                   src={profilePic} 
                   alt="Kepton Otieno" 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                   referrerPolicy="no-referrer"
                 />
-                
-                {/* Upload Banner overlay */}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-4 text-center text-white">
-                  <Upload size={24} className="text-cyan-400 mb-2 animate-bounce" />
-                  <p className="font-sans text-xs font-bold">Drag & Drop Profile Picture</p>
-                  <p className="text-[10px] text-gray-400 mt-1">or click to choose image file</p>
-                  
-                  <label className="absolute inset-0 cursor-pointer">
-                    <input 
-                      id="hero-avatar-file-input"
-                      type="file" 
-                      accept="image/*" 
-                      onChange={handleImageChange} 
-                      className="hidden" 
-                    />
-                  </label>
+
+                {/* Small persistent verified badge on the avatar corner */}
+                <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-gray-950/80 backdrop-blur border border-emerald-500/30 flex items-center gap-1.5 shadow-md">
+                  <ShieldCheck size={11} className="text-emerald-400" />
+                  <span className="font-mono text-[9px] text-gray-300 font-bold tracking-wider">VERIFIED OWNER</span>
                 </div>
               </div>
 
@@ -1730,7 +1754,14 @@ ADDITIONAL INFORMATION:
         contacts={contacts}
         onClearContacts={() => setContacts([])}
         profilePic={profilePic}
-        setProfilePic={setProfilePic}
+        setProfilePic={(newUrl) => {
+          setProfilePic(newUrl);
+          if (newUrl === keptonPortrait) {
+            localStorage.removeItem('kepton_profile_pic');
+          } else {
+            localStorage.setItem('kepton_profile_pic', newUrl);
+          }
+        }}
       />
 
       {/* MODAL 3: Detailed Blog Post Reader */}

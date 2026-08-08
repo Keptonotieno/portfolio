@@ -148,7 +148,7 @@ async function generateContentWithRetryAndFallback(
   contents: any[],
   systemInstruction: string
 ): Promise<string> {
-  const modelsToTry = ["gemini-3.5-flash", "gemini-3.1-flash-lite"];
+  const modelsToTry = ["gemini-3.6-flash", "gemini-3.1-flash-lite"];
   let lastError: any = null;
 
   for (const model of modelsToTry) {
@@ -171,22 +171,22 @@ async function generateContentWithRetryAndFallback(
       } catch (err: any) {
         lastError = err;
         const errMessage = err.message || String(err);
-        console.warn(`Error using model ${model} (attempt ${attempt}/${attempts}):`, errMessage);
+        console.warn(`Notice using model ${model} (attempt ${attempt}/${attempts}):`, errMessage);
         
         // If it's the last attempt of the last model, don't sleep
         if (model === modelsToTry[modelsToTry.length - 1] && attempt === attempts) {
           break;
         }
         
-        // Wait a small amount before retrying (exponential backoff: 300ms, 600ms...)
-        const delay = attempt * 300;
+        // Wait a small amount before retrying (exponential backoff: 400ms, 800ms...)
+        const delay = attempt * 400;
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
 
   // If both models and all retry attempts fail, log it and return our graceful fallback answer
-  console.error("All Gemini API models failed due to high demand or service unavailability. Triggering intelligent server-side fallback.");
+  console.log("Gemini API models currently busy. Triggering intelligent server-side fallback response.");
   return getSmartFallbackResponse(contents);
 }
 

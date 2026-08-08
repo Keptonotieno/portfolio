@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Project, Skill, Education, Testimonial, BlogPost, ContactRequest } from '../types';
 import { calculateReadingTime } from '../utils/readingTime';
+import keptonPortrait from '../assets/images/kepton_portrait_1786179068947.jpg';
 
 interface AdminCMSProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ interface AdminCMSProps {
   onClearContacts: () => void;
 
   profilePic: string;
-  setProfilePic: (url: string) => void;
+  setProfilePic?: (url: string) => void;
 }
 
 export default function AdminCMS({
@@ -54,6 +55,38 @@ export default function AdminCMS({
   setProfilePic
 }: AdminCMSProps) {
   const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'education' | 'testimonials' | 'blog' | 'inbox'>('profile');
+  const [dragActive, setDragActive] = useState(false);
+
+  const handleImageUpload = (file: File) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      if (result && setProfilePic) {
+        setProfilePic(result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageUpload(e.dataTransfer.files[0]);
+    }
+  };
 
   // Supabase Connection State Simulation
   const [supabaseUrl, setSupabaseUrl] = useState((import.meta as any).env.VITE_SUPABASE_URL || '');
@@ -350,33 +383,92 @@ export default function AdminCMS({
                   </p>
                 </div>
 
-                {/* Profile Picture Controller */}
-                <div className={`p-4 rounded-xl border ${darkMode ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-black/5'} space-y-4`}>
-                  <h4 className="font-sans font-bold text-xs uppercase text-cyan-400 tracking-wider">Professional Profile Photo URL</h4>
-                  <div className="flex gap-4 items-center">
-                    <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-white/10 bg-gray-900">
-                      <img 
-                        id="cms-profile-avatar-preview"
-                        src={profilePic || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=200&auto=format&fit=crop'} 
-                        alt="Profile Preview" 
-                        className="w-full h-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <input
-                        id="cms-profile-pic-input"
-                        type="text"
-                        value={profilePic}
-                        onChange={(e) => setProfilePic(e.target.value)}
-                        placeholder="Paste profile photo URL (e.g. Unsplash or professional portrait)"
-                        className={`w-full px-3 py-2 rounded-lg text-xs border focus:outline-none focus:ring-1 focus:ring-cyan-400 ${
-                          darkMode ? 'bg-black border-white/10 text-white' : 'bg-white border-black/10 text-gray-900'
-                        }`}
-                      />
-                      <p className="text-[10px] text-gray-400">
-                        *You can paste any image link or use a mock placeholder. Changes reflect in Hero Section in real-time.
+                 {/* Profile Picture Controller (Developer Drag & Drop Zone) */}
+                <div className={`p-4 sm:p-5 rounded-2xl border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-gray-50 border-black/10'} space-y-4`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-sans font-bold text-xs uppercase text-cyan-400 tracking-wider flex items-center gap-2">
+                        <Upload size={14} />
+                        Developer Profile Avatar Upload
+                      </h4>
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        Only authenticated developers in CMS can update the profile image using drag-and-drop.
                       </p>
+                    </div>
+                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-500/20 shrink-0">
+                      <ShieldCheck size={12} />
+                      <span>DEVELOPER ONLY</span>
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    {/* Current Active Preview */}
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-black/20 border border-white/10">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border-2 border-cyan-500/50 bg-gray-900 shadow-md">
+                        <img 
+                          id="cms-profile-avatar-preview"
+                          src={profilePic || keptonPortrait} 
+                          alt="Profile Preview" 
+                          className="w-full h-full object-cover object-center"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <p className="text-xs font-bold text-gray-100 truncate">Active Profile Avatar</p>
+                        <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block shrink-0" />
+                          {profilePic === keptonPortrait ? 'Default Official Portrait' : 'Custom Developer Upload'}
+                        </p>
+                        {profilePic !== keptonPortrait && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (setProfilePic) {
+                                setProfilePic(keptonPortrait);
+                              }
+                            }}
+                            className="text-[10px] font-mono text-amber-400 hover:underline flex items-center gap-1 pt-0.5"
+                          >
+                            Reset to Default
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Drag & Drop Upload Zone */}
+                    <div 
+                      onDragEnter={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDragOver={handleDrag}
+                      onDrop={handleDrop}
+                      className={`md:col-span-2 relative border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer ${
+                        dragActive 
+                          ? 'border-cyan-400 bg-cyan-500/10 scale-[1.01]' 
+                          : 'border-white/20 hover:border-cyan-500/50 bg-black/10'
+                      }`}
+                    >
+                      <input 
+                        id="cms-avatar-file-input"
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleImageUpload(e.target.files[0]);
+                          }
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      />
+                      <div className="flex flex-col items-center justify-center space-y-1.5 pointer-events-none">
+                        <div className="w-9 h-9 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20">
+                          <Upload size={18} />
+                        </div>
+                        <p className="text-xs font-bold text-gray-200">
+                          Drag & Drop profile image here, or <span className="text-cyan-400 underline">Browse</span>
+                        </p>
+                        <p className="text-[10px] text-gray-400">
+                          Authorized developer upload. Supports JPG, PNG, WEBP.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
