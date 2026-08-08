@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { 
   X, Plus, Trash2, Edit, Save, BookOpen, GraduationCap, Award, 
   Terminal, ShieldCheck, Mail, Database, Upload, Sparkles, MessageSquare, Check, AlertTriangle,
-  Github, ExternalLink, Calendar
+  Github, ExternalLink, Calendar, Lock, Key, LogOut, ShieldAlert
 } from 'lucide-react';
 import { Project, Skill, Education, Testimonial, BlogPost, ContactRequest } from '../types';
 import { calculateReadingTime } from '../utils/readingTime';
@@ -56,6 +56,34 @@ export default function AdminCMS({
 }: AdminCMSProps) {
   const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'education' | 'testimonials' | 'blog' | 'inbox'>('profile');
   const [dragActive, setDragActive] = useState(false);
+
+  // Admin CMS Password Authentication State
+  const ADMIN_PASSCODE = 'kepton@12Romez';
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return sessionStorage.getItem('kepton_admin_auth') === 'true';
+  });
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
+
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPass = passwordInput.trim();
+    if (cleanPass === ADMIN_PASSCODE) {
+      setIsAuthenticated(true);
+      sessionStorage.setItem('kepton_admin_auth', 'true');
+      setAuthError('');
+      setPasswordInput('');
+    } else {
+      setAuthError('Access Denied: Invalid Developer Passcode.');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem('kepton_admin_auth');
+    setPasswordInput('');
+    setAuthError('');
+  };
 
   const handleImageUpload = (file: File) => {
     if (!file || !file.type.startsWith('image/')) return;
@@ -219,6 +247,86 @@ export default function AdminCMS({
 
   if (!isOpen) return null;
 
+  if (!isAuthenticated) {
+    return (
+      <div id="cms-auth-overlay" className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-md">
+        <div 
+          id="cms-auth-card" 
+          className={`w-full max-w-md p-6 sm:p-8 rounded-2xl border shadow-2xl space-y-6 relative ${
+            darkMode 
+              ? 'bg-gray-950 border-white/10 text-white' 
+              : 'bg-white border-black/10 text-gray-900'
+          }`}
+        >
+          <button 
+            id="cms-auth-close-btn"
+            onClick={onClose}
+            className={`absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-500/10 transition-colors ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+          >
+            <X size={18} />
+          </button>
+
+          <div className="text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center text-white mx-auto shadow-lg shadow-purple-500/20">
+              <Lock size={22} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-sans font-extrabold text-xl">Admin Access Verification</h3>
+              <p className="font-mono text-xs text-gray-400">Restricted Console &bull; Security Verification Required</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <div className="space-y-1.5 text-left">
+              <label htmlFor="cms-admin-passcode" className="block font-mono text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                Developer Passcode
+              </label>
+              <div className="relative">
+                <input 
+                  id="cms-admin-passcode"
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    if (authError) setAuthError('');
+                  }}
+                  placeholder="Enter administrator passcode..."
+                  className={`w-full px-4 py-2.5 pl-10 rounded-xl text-xs font-mono border focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all ${
+                    darkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-black/10 text-gray-900'
+                  }`}
+                  autoFocus
+                />
+                <Key size={16} className="absolute left-3 top-3.5 text-gray-400" />
+              </div>
+            </div>
+
+            {authError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 font-mono text-[11px] flex items-center gap-2">
+                <ShieldAlert size={16} className="shrink-0" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            <button
+              id="cms-auth-submit-btn"
+              type="submit"
+              className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-sans text-xs font-bold rounded-xl shadow-lg shadow-purple-600/20 transition-all flex items-center justify-center gap-2"
+            >
+              <ShieldCheck size={16} />
+              <span>Unlock Admin Console</span>
+            </button>
+          </form>
+
+          <div className="pt-2 border-t border-gray-500/10 text-center">
+            <span className="font-mono text-[10px] text-gray-400">
+              Admin Authentication &bull; Protected Passcode Security
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div id="cms-overlay" className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-md">
       <div 
@@ -238,8 +346,9 @@ export default function AdminCMS({
             <div>
               <h2 className="font-sans font-bold text-base flex items-center gap-2">
                 Developer Admin Center (CMS)
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  Interactive Dev mode
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                  <ShieldCheck size={10} className="text-cyan-400" />
+                  Authenticated Admin Mode
                 </span>
               </h2>
               <p className="font-mono text-[10px] text-gray-400">
@@ -247,13 +356,28 @@ export default function AdminCMS({
               </p>
             </div>
           </div>
-          <button 
-            id="cms-close-btn"
-            onClick={onClose}
-            className={`p-2 rounded-lg hover:bg-gray-500/10 transition-colors ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              id="cms-lock-btn"
+              onClick={handleLogout}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 border transition-all ${
+                darkMode 
+                  ? 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20' 
+                  : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'
+              }`}
+              title="Lock Admin Console"
+            >
+              <LogOut size={14} />
+              <span className="hidden sm:inline">Lock Console</span>
+            </button>
+            <button 
+              id="cms-close-btn"
+              onClick={onClose}
+              className={`p-2 rounded-lg hover:bg-gray-500/10 transition-colors ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Content Body Layout */}

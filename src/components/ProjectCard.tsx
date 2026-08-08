@@ -14,7 +14,7 @@ import { Project, ProjectSyncInfo } from '../types';
 
 // Technology icon and styling mapper
 const getTechIconInfo = (techName: string) => {
-  const normalized = techName.trim().toLowerCase();
+  const normalized = (techName || '').trim().toLowerCase();
   
   if (normalized.includes('react')) {
     return {
@@ -144,7 +144,7 @@ const getRelativeTime = (dateStr: string): string => {
 
 // Check if a release tag represents a beta, pre-release or alpha build
 const isBetaRelease = (tag: string): boolean => {
-  const normalized = tag.toLowerCase();
+  const normalized = (tag || '').toLowerCase();
   return (
     normalized.includes('beta') ||
     normalized.includes('alpha') ||
@@ -435,8 +435,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           </div>
 
           <div className="flex flex-wrap gap-2 pt-2">
-            {proj.technologies.map((tech, idx) => {
-              const isTechSelected = selectedTech.trim().toLowerCase() === tech.trim().toLowerCase();
+            {(proj.technologies || []).map((tech, idx) => {
+              const isTechSelected = (selectedTech || '').trim().toLowerCase() === (tech || '').trim().toLowerCase();
               const techInfo = getTechIconInfo(tech);
               const IconComponent = techInfo.icon;
               return (

@@ -52,7 +52,7 @@ const LOCAL_FALLBACK_ANSWERS: { keywords: string[]; response: string }[] = [
 ];
 
 function getLocalFallback(query: string): string {
-  const lowercase = query.toLowerCase();
+  const lowercase = (query || '').toLowerCase();
   for (const fallback of LOCAL_FALLBACK_ANSWERS) {
     if (fallback.keywords.some(keyword => lowercase.includes(keyword))) {
       return fallback.response;

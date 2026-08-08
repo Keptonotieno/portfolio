@@ -75,13 +75,15 @@ export default function KeptonCodeSnake({ darkMode }: { darkMode: boolean }) {
   // Easter egg keyboard listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!e || !e.key) return;
+      const key = e.key.toLowerCase();
+
       // Monitor arrow/WASD inputs for directional changes to prevent window scrolling
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key.toLowerCase()) && isStarted && !isPaused) {
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(key) && isStarted && !isPaused) {
         e.preventDefault();
       }
 
       // Direction keys
-      const key = e.key.toLowerCase();
       if ((key === 'arrowup' || key === 'w') && direction !== 'DOWN') setNextDir('UP');
       if ((key === 'arrowdown' || key === 's') && direction !== 'UP') setNextDir('DOWN');
       if ((key === 'arrowleft' || key === 'a') && direction !== 'RIGHT') setNextDir('LEFT');

@@ -70,7 +70,7 @@ const sectionFadeUpItem = {
 
 // Futuristic technology to icon & styling mapper helper
 const getTechIconInfo = (techName: string) => {
-  const normalized = techName.trim().toLowerCase();
+  const normalized = (techName || '').trim().toLowerCase();
   
   if (normalized.includes('react')) {
     return {
@@ -772,10 +772,14 @@ ADDITIONAL INFORMATION:
   const techCounts = React.useMemo(() => {
     const counts: Record<string, number> = {};
     projects.forEach(p => {
-      if (p.technologies) {
+      if (p.technologies && Array.isArray(p.technologies)) {
         p.technologies.forEach(t => {
-          const cleanTech = t.trim();
-          counts[cleanTech] = (counts[cleanTech] || 0) + 1;
+          if (t && typeof t === 'string') {
+            const cleanTech = t.trim();
+            if (cleanTech) {
+              counts[cleanTech] = (counts[cleanTech] || 0) + 1;
+            }
+          }
         });
       }
     });
@@ -789,7 +793,9 @@ ADDITIONAL INFORMATION:
     if (projectFilter === 'Web Apps') {
       matchesCategory = p.category === 'Full Stack' || p.category === 'React' || p.category === 'Web Applications' || p.category === 'AI';
     } else if (projectFilter === 'Mobile') {
-      matchesCategory = p.description.toLowerCase().includes('responsive') || p.description.toLowerCase().includes('mobile') || p.technologies.some(t => t.toLowerCase().includes('responsive'));
+      const desc = (p.description || '').toLowerCase();
+      const techs = p.technologies || [];
+      matchesCategory = desc.includes('responsive') || desc.includes('mobile') || techs.some(t => (t || '').toLowerCase().includes('responsive'));
     } else if (projectFilter === 'Open Source') {
       matchesCategory = !!(p.githubLink && p.githubLink.includes('github.com'));
     }
@@ -797,7 +803,8 @@ ADDITIONAL INFORMATION:
     // 2. Technology check
     let matchesTech = true;
     if (selectedTech !== 'All') {
-      matchesTech = p.technologies && p.technologies.map(t => t.trim().toLowerCase()).includes(selectedTech.trim().toLowerCase());
+      const selTech = (selectedTech || '').trim().toLowerCase();
+      matchesTech = !!(p.technologies && p.technologies.map(t => (t || '').trim().toLowerCase()).includes(selTech));
     }
 
     return matchesCategory && matchesTech;
@@ -1186,7 +1193,7 @@ ADDITIONAL INFORMATION:
               <div className="flex flex-wrap items-center justify-center gap-2">
                 {(['All', 'Web Apps', 'Mobile', 'Open Source'] as const).map((cat) => (
                   <button
-                    id={`project-filter-${cat.toLowerCase().replace(' ', '-')}`}
+                    id={`project-filter-${(cat || '').toLowerCase().replace(' ', '-')}`}
                     key={cat}
                     onClick={() => {
                       setProjectFilter(cat);
@@ -1216,7 +1223,7 @@ ADDITIONAL INFORMATION:
                   const count = techCounts[tech];
                   return (
                     <button
-                      id={`project-tech-filter-${tech.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                      id={`project-tech-filter-${(tech || '').toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
                       key={tech}
                       onClick={() => setSelectedTech(tech)}
                       className={`px-3 py-1 rounded-lg text-xs font-medium font-mono transition-all duration-200 flex items-center gap-1.5 hover:scale-105 ${

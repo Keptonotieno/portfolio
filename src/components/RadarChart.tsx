@@ -14,7 +14,7 @@ interface RadarChartProps {
 export default function RadarChart({ metrics, darkMode }: RadarChartProps) {
   // Map metrics to 0-100 scale
   const parsePerformance = (grade: string): number => {
-    const clean = grade.trim().toUpperCase();
+    const clean = (grade || '').trim().toUpperCase();
     if (clean.includes('A+')) return 98;
     if (clean.includes('A-')) return 85;
     if (clean.startsWith('A')) return 92;
@@ -24,7 +24,7 @@ export default function RadarChart({ metrics, darkMode }: RadarChartProps) {
   };
 
   const parseMaintainability = (level: string): number => {
-    const clean = level.trim().toLowerCase();
+    const clean = (level || '').trim().toLowerCase();
     if (clean.includes('excellent')) return 96;
     if (clean.includes('high')) return 86;
     if (clean.includes('medium') || clean.includes('good')) return 75;

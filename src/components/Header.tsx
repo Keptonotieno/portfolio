@@ -91,7 +91,7 @@ export default function Header({
             {navItems.map((item) => (
               <a
                 key={item.name}
-                id={`nav-item-${item.name.toLowerCase()}`}
+                id={`nav-item-${(item.name || '').toLowerCase()}`}
                 href={item.href}
                 onClick={(e) => {
                   e.preventDefault();
@@ -205,7 +205,7 @@ export default function Header({
               {navItems.map((item) => (
                 <li key={item.name}>
                   <a
-                    id={`mobile-nav-${item.name.toLowerCase()}`}
+                    id={`mobile-nav-${(item.name || '').toLowerCase()}`}
                     href={item.href}
                     onClick={(e) => {
                       e.preventDefault();
